@@ -2,10 +2,13 @@ import { useApp } from '../context/AppContext';
 import { SMART_PREFERENCES } from '../data/options';
 import type { SmartPreference } from '../types';
 import { Chip } from './Chip';
+import { preferenceSupported } from '../utils/filters';
 import { LocationButton } from './LocationButton';
 
 export function SmartPreferences() {
-  const { t, lang, preferences, setPreferences, geo } = useApp();
+  const { t, lang, preferences, setPreferences, geo, restaurants } = useApp();
+  const supported = (p: SmartPreference) => preferenceSupported(restaurants, p);
+  const unsupported = SMART_PREFERENCES.filter((o) => !supported(o.value));
 
   const toggle = (p: SmartPreference) => {
     const on = !preferences.includes(p);
@@ -18,11 +21,16 @@ export function SmartPreferences() {
       <p className="text-sm text-ink-soft">✨ {t.smartHint}</p>
       <div className="flex flex-wrap gap-2">
         {SMART_PREFERENCES.map((o) => (
-          <Chip key={o.value} tone="gold" icon={o.icon} active={preferences.includes(o.value)} onClick={() => toggle(o.value)}>
+          <Chip key={o.value} tone="gold" icon={o.icon} disabled={!supported(o.value) && !preferences.includes(o.value)} active={preferences.includes(o.value)} onClick={() => toggle(o.value)}>
             {lang === 'ar' ? o.ar : o.en}
           </Chip>
         ))}
       </div>
+      {unsupported.length > 0 && (
+        <p className="text-xs text-ink-mute">
+          {unsupported.map((o) => (lang === 'ar' ? o.ar : o.en)).join('، ')}: {t.notInData}
+        </p>
+      )}
       {preferences.includes('nearMe') && geo.status !== 'granted' && (
         <div className="space-y-2">
           <p className="text-xs text-ink-mute">{t.nearMeNeedsLocation}</p>

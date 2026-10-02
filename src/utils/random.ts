@@ -53,3 +53,35 @@ export function pickAvoidingRecent<T extends { id: string }>(
 export function recentWindow(poolSize: number): number {
   return Math.max(0, Math.min(6, Math.floor(poolSize / 2)));
 }
+
+/**
+ * Brand key for a place name so branches of one chain count as one restaurant:
+ * "Kudu - Bir Uthman" → "kudu", "Shawarmer | شاورمر" → "shawarmer".
+ */
+export function brandKey(name: string): string {
+  const base = name.split(/\s[-–|]\s|\|/)[0];
+  return base.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '') || name;
+}
+
+/**
+ * Pick a restaurant (not a branch): every brand gets one equal chance, recent
+ * brands are avoided, then a random branch of the chosen brand is returned.
+ * `nameOf` resolves recent ids that may not be in the pool.
+ */
+export function pickBrandAvoidingRecent<T extends { id: string; name: string }>(
+  pool: readonly T[],
+  recentIds: readonly string[],
+  nameOf: (id: string) => string | undefined,
+): T | undefined {
+  const groups = new Map<string, T[]>();
+  for (const r of pool) {
+    const k = brandKey(r.name);
+    const g = groups.get(k);
+    if (g) g.push(r);
+    else groups.set(k, [r]);
+  }
+  const brands = [...groups.entries()].map(([id, branches]) => ({ id, branches }));
+  const recentBrands = [...new Set(recentIds.map((id) => nameOf(id)).filter((n): n is string => !!n).map(brandKey))];
+  const brand = pickAvoidingRecent(brands, recentBrands.slice(0, recentWindow(brands.length)));
+  return brand && pickOne(brand.branches);
+}

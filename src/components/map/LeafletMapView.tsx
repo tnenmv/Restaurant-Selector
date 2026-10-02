@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { CircleMarker, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import { MADINAH_CENTER } from '../../data/options';
 import { mapConfig } from '../../services/map/mapConfig';
-import { markerIcon } from './markers';
+import { CATEGORY_DOT, DENSE_THRESHOLD, markerIcon } from './markers';
 import type { MapViewProps } from './types';
 
 const iconCache = new Map<string, L.DivIcon>();
@@ -76,7 +76,16 @@ export function LeafletMapView({
             },
           }}
         />
-        {restaurants.map((r) => (
+        {restaurants.map((r) =>
+          restaurants.length > DENSE_THRESHOLD && r.id !== selectedId ? (
+            <CircleMarker
+              key={r.id}
+              center={[r.latitude, r.longitude]}
+              radius={5}
+              pathOptions={{ color: '#fff', weight: 1.5, fillColor: CATEGORY_DOT[r.category], fillOpacity: 0.95 }}
+              eventHandlers={{ click: () => onSelect?.(r.id) }}
+            />
+          ) : (
           <Marker
             key={r.id}
             position={[r.latitude, r.longitude]}
@@ -85,7 +94,8 @@ export function LeafletMapView({
             eventHandlers={{ click: () => onSelect?.(r.id) }}
             title={r.nameEn}
           />
-        ))}
+          ),
+        )}
         {userLocation && (
           <CircleMarker
             center={[userLocation.latitude, userLocation.longitude]}

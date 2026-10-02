@@ -35,7 +35,8 @@ export type AreaId =
   | 'jamiah'
   | 'hijrah'
   | 'uyun'
-  | 'aqoul';
+  | 'aqoul'
+  | 'other';
 
 export interface Restaurant {
   id: string;
@@ -43,24 +44,30 @@ export interface Restaurant {
   nameEn: string;
   category: PlaceCategory;
   cuisine: Cuisine;
-  priceLevel: PriceLevel;
-  rating: number;
+  /** null = unknown (e.g. open data sources without prices). */
+  priceLevel: PriceLevel | null;
+  /** null = no rating available. */
+  rating: number | null;
   area: AreaId;
-  address: string;
-  addressEn: string;
+  address?: string;
+  addressEn?: string;
   latitude: number;
   longitude: number;
   /** Optional photo URL. When missing or broken, an illustrated cover is rendered instead. */
   image?: string;
-  description: string;
-  descriptionEn: string;
-  openNow: boolean;
-  familyFriendly: boolean;
-  outdoorSeating: boolean;
-  /** Extra prototype attributes used by smart mode. */
-  quiet: boolean;
-  groupFriendly: boolean;
-  /** True for every record in the bundled dataset — never verified real-world info. */
+  description?: string;
+  descriptionEn?: string;
+  /** Amenity flags: null = unknown for this source. */
+  openNow: boolean | null;
+  familyFriendly: boolean | null;
+  outdoorSeating: boolean | null;
+  quiet: boolean | null;
+  groupFriendly: boolean | null;
+  website?: string;
+  phone?: string;
+  /** Upstream data providers for this record (e.g. "meta", "Foursquare"). */
+  sources?: string[];
+  /** True for the fictional prototype dataset; false for real-world data. */
   isSample: boolean;
 }
 

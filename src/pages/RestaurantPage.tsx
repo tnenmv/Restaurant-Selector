@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types';
 import { RestaurantImage } from '../components/RestaurantImage';
-import { Distance, FeatureBadges, Price, Rating, SampleBadge, useLabels } from '../components/Badges';
+import { Distance, FeatureBadges, Price, Rating, SampleBadge, SourceInfo, useLabels } from '../components/Badges';
 import { HeartIcon } from '../components/Navigation';
 import { MapView } from '../components/map/MapView';
 import { EmptyState } from '../components/EmptyState';
@@ -70,7 +70,7 @@ export function RestaurantPage() {
       <article className="card overflow-hidden animate-fade-up">
         <div className="relative">
           <RestaurantImage restaurant={r} className="block h-60 w-full sm:h-80" />
-          <SampleBadge className="absolute end-4 top-4" />
+          <SampleBadge restaurant={r} className="absolute end-4 top-4" />
         </div>
         <div className="space-y-4 p-5 sm:p-7">
           <div className="flex items-start justify-between gap-3">
@@ -97,12 +97,14 @@ export function RestaurantPage() {
             <Price level={r.priceLevel} />
             <Distance restaurant={r} />
           </div>
-          <p className="leading-relaxed text-ink-soft">{L.description(r)}</p>
+          {L.description(r) && <p className="leading-relaxed text-ink-soft">{L.description(r)}</p>}
           <FeatureBadges restaurant={r} />
+          <SourceInfo restaurant={r} />
           <div className="rounded-2xl bg-sand-100 p-4 text-sm">
             <div className="font-semibold">📍 {t.address}</div>
             <div className="mt-1 text-ink-soft">
-              {L.address(r)} — {L.area(r)}{lang === 'ar' ? '، ' : ', '}{lang === 'ar' ? 'المدينة المنورة' : 'Madinah'}
+              {L.address(r) ? `${L.address(r)} — ` : ''}
+              {L.area(r)}{lang === 'ar' ? '، ' : ', '}{lang === 'ar' ? 'المدينة المنورة' : 'Madinah'}
             </div>
             <div className="mt-1 text-xs text-ink-mute" dir="ltr">
               {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)} ({t.approx})

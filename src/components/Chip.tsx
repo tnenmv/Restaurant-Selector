@@ -7,6 +7,8 @@ export function Chip({
   icon,
   tone = 'green',
   size = 'md',
+  disabled,
+  count,
 }: {
   active: boolean;
   onClick: () => void;
@@ -14,6 +16,9 @@ export function Chip({
   icon?: ReactNode;
   tone?: 'green' | 'gold';
   size?: 'md' | 'lg';
+  disabled?: boolean;
+  /** Optional number of matching places, shown after the label. */
+  count?: number;
 }) {
   const on =
     tone === 'gold'
@@ -24,12 +29,20 @@ export function Chip({
       type="button"
       aria-pressed={active}
       onClick={onClick}
+      disabled={disabled}
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border font-medium transition-all duration-150 active:scale-95 ${
         size === 'lg' ? 'min-h-[46px] px-4 text-[15px]' : 'min-h-[40px] px-3.5 text-sm'
-      } ${active ? on : 'bg-white text-ink-soft border-sand-300 hover:border-palm-300 hover:text-palm-800'}`}
+      } ${
+        disabled
+          ? 'cursor-not-allowed border-dashed border-sand-300 bg-sand-100 text-ink-mute/60'
+          : active
+            ? on
+            : 'bg-white text-ink-soft border-sand-300 hover:border-palm-300 hover:text-palm-800'
+      }`}
     >
-      {icon && <span aria-hidden>{icon}</span>}
+      {icon && <span aria-hidden className={disabled ? 'opacity-40' : ''}>{icon}</span>}
       {children}
+      {count !== undefined && <span className={`text-[11px] tabular-nums ${active ? 'text-white/80' : 'text-ink-mute'}`}>{count}</span>}
     </button>
   );
 }

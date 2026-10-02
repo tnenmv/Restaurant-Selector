@@ -3,8 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { usePicker } from '../hooks/usePicker';
 import { restaurantService } from '../services/restaurantService';
-import { applyQuery, EMPTY_FILTERS } from '../utils/filters';
-import type { SmartPreference } from '../types';
+import { applyQuery, EMPTY_FILTERS, preferenceSupported } from '../utils/filters';
+import type { RestaurantFilters, SmartPreference } from '../types';
 import { PickButton } from '../components/PickButton';
 import { PickerStage } from '../components/PickerStage';
 import { ModeToggle } from '../components/ModeToggle';
@@ -80,6 +80,24 @@ export function HomePage() {
     if (on) setHomeMode('smart');
     if (on && p === 'nearMe' && geo.status !== 'granted') void geo.request();
   };
+
+  // "أو حدد تفضيلاتك" shortcuts — only the ones this data can answer, up to five.
+  const toggleFilter = <K extends 'cuisines' | 'categories' | 'prices'>(key: K, v: RestaurantFilters[K][number]) => {
+    const list = filters[key] as (typeof v)[];
+    setFilters({ ...filters, [key]: list.includes(v) ? list.filter((x) => x !== v) : [...list, v] });
+  };
+  const ar = app.lang === 'ar';
+  const quickChips = [
+    { key: 'near', icon: '📍', label: ar ? 'قريب مني' : 'Near me', ok: true, active: false, toggle: () => togglePref('nearMe') },
+    { key: 'budget', icon: '💰', label: ar ? 'اقتصادي' : 'Budget', ok: restaurants.some((r) => r.priceLevel === 1), active: filters.prices.includes(1), toggle: () => toggleFilter('prices', 1) },
+    { key: 'family', icon: '👨‍👩‍👧', label: ar ? 'عائلي' : 'Family', ok: preferenceSupported(restaurants, 'family'), active: false, toggle: () => togglePref('family') },
+    { key: 'burger', icon: '🍔', label: ar ? 'برجر' : 'Burger', ok: true, active: filters.cuisines.includes('burger'), toggle: () => toggleFilter('cuisines', 'burger') },
+    { key: 'cafe', icon: '☕', label: ar ? 'كافيه' : 'Café', ok: true, active: filters.categories.includes('cafe'), toggle: () => toggleFilter('categories', 'cafe') },
+    { key: 'pizza', icon: '🍕', label: ar ? 'بيتزا' : 'Pizza', ok: true, active: filters.cuisines.includes('pizza'), toggle: () => toggleFilter('cuisines', 'pizza') },
+    { key: 'sweets', icon: '🍰', label: ar ? 'حلويات' : 'Desserts', ok: true, active: filters.categories.includes('desserts'), toggle: () => toggleFilter('categories', 'desserts') },
+  ]
+    .filter((c) => c.ok)
+    .slice(0, 5);
 
   const spinning = picker.phase === 'spinning';
   const recent = history.entries.map((e) => getById(e.restaurantId)).filter(Boolean).slice(0, 8);
@@ -158,21 +176,11 @@ export function HomePage() {
           <section className="space-y-3">
             <h2 className="text-center text-sm font-semibold text-ink-mute">— {t.orPrefs} —</h2>
             <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:justify-center">
-              <Chip size="lg" icon="📍" active={false} onClick={() => togglePref('nearMe')}>
-                {app.lang === 'ar' ? 'قريب مني' : 'Near me'}
-              </Chip>
-              <Chip size="lg" icon="💰" active={filters.prices.includes(1)} onClick={() => setFilters({ ...filters, prices: filters.prices.includes(1) ? filters.prices.filter((p) => p !== 1) : [...filters.prices, 1] })}>
-                {app.lang === 'ar' ? 'اقتصادي' : 'Budget'}
-              </Chip>
-              <Chip size="lg" icon="👨‍👩‍👧" active={false} onClick={() => togglePref('family')}>
-                {app.lang === 'ar' ? 'عائلي' : 'Family'}
-              </Chip>
-              <Chip size="lg" icon="🍔" active={filters.cuisines.includes('burger')} onClick={() => setFilters({ ...filters, cuisines: filters.cuisines.includes('burger') ? filters.cuisines.filter((c) => c !== 'burger') : [...filters.cuisines, 'burger'] })}>
-                {app.lang === 'ar' ? 'برجر' : 'Burger'}
-              </Chip>
-              <Chip size="lg" icon="☕" active={filters.categories.includes('cafe')} onClick={() => setFilters({ ...filters, categories: filters.categories.includes('cafe') ? filters.categories.filter((c) => c !== 'cafe') : [...filters.categories, 'cafe'] })}>
-                {app.lang === 'ar' ? 'كافيه' : 'Café'}
-              </Chip>
+              {quickChips.map((c) => (
+                <Chip key={c.key} size="lg" icon={c.icon} active={c.active} onClick={c.toggle}>
+                  {c.label}
+                </Chip>
+              ))}
             </div>
           </section>
         )}

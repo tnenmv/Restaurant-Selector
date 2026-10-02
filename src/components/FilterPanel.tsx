@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useApp } from '../context/AppContext';
 import { AREAS, CATEGORIES, CUISINES, PRICES, RATINGS, type Option } from '../data/options';
-import type { RestaurantFilters } from '../types';
+import type { Restaurant, RestaurantFilters } from '../types';
 import { EMPTY_FILTERS, countActiveFilters } from '../utils/filters';
 import { Chip } from './Chip';
 
@@ -18,7 +18,11 @@ export function FilterPanel({
   onOpenChange: (open: boolean) => void;
   matchCount: number;
 }) {
-  const { t, lang, filters, setFilters } = useApp();
+  const { t, lang, filters, setFilters, restaurants } = useApp();
+  const countBy = <K extends keyof Restaurant>(key: K, value: Restaurant[K]) => restaurants.filter((r) => r[key] === value).length;
+  const ratingCount = (min: number) => (min === 0 ? restaurants.length : restaurants.filter((r) => (r.rating ?? 0) >= min).length);
+  const noPrices = restaurants.length > 0 && restaurants.every((r) => r.priceLevel === null);
+  const noRatings = restaurants.length > 0 && restaurants.every((r) => r.rating === null);
   const active = countActiveFilters(filters);
   const L = (o: Option<unknown>) => (lang === 'ar' ? o.ar : o.en);
   const update = (patch: Partial<RestaurantFilters>) => setFilters({ ...filters, ...patch });
@@ -55,35 +59,35 @@ export function FilterPanel({
           <div className="space-y-5 border-t border-sand-200 px-5 pb-5 pt-4">
             <Group title={`🍽️ ${t.cuisine}`}>
               {CUISINES.map((o) => (
-                <Chip key={o.value} icon={o.icon} active={filters.cuisines.includes(o.value)} onClick={() => update({ cuisines: toggleIn(filters.cuisines, o.value) })}>
+                <Chip key={o.value} icon={o.icon} count={countBy('cuisine', o.value)} disabled={!countBy('cuisine', o.value) && !filters.cuisines.includes(o.value)} active={filters.cuisines.includes(o.value)} onClick={() => update({ cuisines: toggleIn(filters.cuisines, o.value) })}>
                   {L(o)}
                 </Chip>
               ))}
             </Group>
-            <Group title={`💰 ${t.price}`}>
+            <Group title={`💰 ${t.price}`} note={noPrices ? t.notInData : undefined}>
               {PRICES.map((o) => (
-                <Chip key={o.value} active={filters.prices.includes(o.value)} onClick={() => update({ prices: toggleIn(filters.prices, o.value) })}>
+                <Chip key={o.value} disabled={noPrices && !filters.prices.includes(o.value)} active={filters.prices.includes(o.value)} onClick={() => update({ prices: toggleIn(filters.prices, o.value) })}>
                   <span dir="ltr" className="font-bold opacity-70">{o.icon}</span> {L(o)}
                 </Chip>
               ))}
             </Group>
             <Group title={`📍 ${t.area}`}>
               {AREAS.map((o) => (
-                <Chip key={o.value} active={filters.areas.includes(o.value)} onClick={() => update({ areas: toggleIn(filters.areas, o.value) })}>
+                <Chip key={o.value} count={countBy('area', o.value)} disabled={!countBy('area', o.value) && !filters.areas.includes(o.value)} active={filters.areas.includes(o.value)} onClick={() => update({ areas: toggleIn(filters.areas, o.value) })}>
                   {L(o)}
                 </Chip>
               ))}
             </Group>
             <Group title={`🏷️ ${t.placeType}`}>
               {CATEGORIES.map((o) => (
-                <Chip key={o.value} icon={o.icon} active={filters.categories.includes(o.value)} onClick={() => update({ categories: toggleIn(filters.categories, o.value) })}>
+                <Chip key={o.value} icon={o.icon} count={countBy('category', o.value)} disabled={!countBy('category', o.value) && !filters.categories.includes(o.value)} active={filters.categories.includes(o.value)} onClick={() => update({ categories: toggleIn(filters.categories, o.value) })}>
                   {L(o)}
                 </Chip>
               ))}
             </Group>
-            <Group title={`⭐ ${t.rating}`}>
+            <Group title={`⭐ ${t.rating}`} note={noRatings ? t.notInData : undefined}>
               {RATINGS.map((o) => (
-                <Chip key={o.value} active={filters.minRating === o.value} onClick={() => update({ minRating: o.value })}>
+                <Chip key={o.value} disabled={o.value > 0 && !ratingCount(o.value) && filters.minRating !== o.value} active={filters.minRating === o.value} onClick={() => update({ minRating: o.value })}>
                   {L(o)}
                 </Chip>
               ))}
@@ -106,10 +110,13 @@ export function FilterPanel({
   );
 }
 
-function Group({ title, children }: { title: string; children: ReactNode }) {
+function Group({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
   return (
     <fieldset>
-      <legend className="mb-2 text-sm font-semibold text-ink-soft">{title}</legend>
+      <legend className="mb-2 text-sm font-semibold text-ink-soft">
+        {title}
+        {note && <span className="ms-2 text-xs font-normal text-ink-mute">({note})</span>}
+      </legend>
       <div className="flex flex-wrap gap-2">{children}</div>
     </fieldset>
   );

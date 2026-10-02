@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import type { Restaurant } from '../types';
 import { useApp } from '../context/AppContext';
-import { Distance, FeatureBadges, Price, Rating, SampleBadge, useLabels } from './Badges';
+import { Distance, FeatureBadges, Price, Rating, SampleBadge, SourceInfo, useLabels } from './Badges';
 import { RestaurantImage } from './RestaurantImage';
 import { Confetti } from './Confetti';
 import { HeartIcon } from './Navigation';
@@ -36,7 +36,7 @@ export function ResultCard({
               {headline ?? t.youGot}
             </span>
           </div>
-          <SampleBadge className="absolute end-4 top-4" />
+          <SampleBadge restaurant={r} className="absolute end-4 top-4" />
           <div className="absolute inset-x-4 bottom-4 text-white">
             <h2 className="font-display text-2xl font-bold leading-tight drop-shadow sm:text-3xl" data-testid="result-name">
               {name(r)}
@@ -54,8 +54,9 @@ export function ResultCard({
             <span className="inline-flex items-center gap-1 text-sm text-ink-soft">📍 {L.area(r)}</span>
             <Distance restaurant={r} />
           </div>
-          <p className="text-[15px] leading-relaxed text-ink-soft">{L.description(r)}</p>
+          {L.description(r) && <p className="text-[15px] leading-relaxed text-ink-soft">{L.description(r)}</p>}
           <FeatureBadges restaurant={r} />
+          <SourceInfo restaurant={r} />
 
           <div className="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-3">
             <button type="button" onClick={onPickAgain} className="btn-primary col-span-2 px-2 text-base sm:col-span-1" data-testid="pick-again">

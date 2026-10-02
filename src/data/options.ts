@@ -39,7 +39,8 @@ export const PRICE_RANGE_SAR: Record<PriceLevel, [number, number]> = {
   3: [100, 220],
 };
 
-export const AREAS: (Option<AreaId> & { center: [number, number] })[] = [
+/** `center` is an approximate district centre; 'other' covers places outside the listed districts. */
+export const AREAS: (Option<AreaId> & { center?: [number, number] })[] = [
   { value: 'central', ar: 'المنطقة المركزية', en: 'Central Area', icon: '🕌', center: [24.4686, 39.6112] },
   { value: 'quba', ar: 'قباء', en: 'Quba', icon: '📍', center: [24.4395, 39.6175] },
   { value: 'uraid', ar: 'العريض', en: 'Al-Uraid', icon: '📍', center: [24.5085, 39.5995] },
@@ -52,6 +53,7 @@ export const AREAS: (Option<AreaId> & { center: [number, number] })[] = [
   { value: 'hijrah', ar: 'طريق الهجرة', en: 'Hijrah Road', icon: '📍', center: [24.4200, 39.5480] },
   { value: 'uyun', ar: 'العيون', en: 'Al-Uyun', icon: '📍', center: [24.5250, 39.5700] },
   { value: 'aqoul', ar: 'العاقول', en: 'Al-Aqoul', icon: '📍', center: [24.5150, 39.6650] },
+  { value: 'other', ar: 'مناطق أخرى', en: 'Other areas', icon: '📍' },
 ];
 
 export const CATEGORIES: Option<PlaceCategory>[] = [

@@ -65,7 +65,7 @@ export function RestaurantRow({
   );
   return (
     <div
-      className={`card flex items-center gap-3 p-3 transition ${selected ? 'ring-2 ring-palm-500' : ''}`}
+      className={`card flex min-w-0 items-center gap-3 p-3 transition ${selected ? 'ring-2 ring-palm-500' : ''}`}
       data-testid="restaurant-row"
     >
       {onSelect ? (

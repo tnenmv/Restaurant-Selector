@@ -15,21 +15,26 @@ export function countActiveFilters(f: RestaurantFilters): number {
 
 export function matchesFilters(r: Restaurant, f: RestaurantFilters): boolean {
   if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false;
-  if (f.prices.length && !f.prices.includes(r.priceLevel)) return false;
+  if (f.prices.length && (r.priceLevel === null || !f.prices.includes(r.priceLevel))) return false;
   if (f.areas.length && !f.areas.includes(r.area)) return false;
   if (f.categories.length && !f.categories.includes(r.category)) return false;
-  if (f.minRating > 0 && r.rating < f.minRating) return false;
+  if (f.minRating > 0 && (r.rating ?? 0) < f.minRating) return false;
   return true;
 }
 
 const PREFERENCE_TESTS: Record<Exclude<SmartPreference, 'nearMe'>, (r: Restaurant) => boolean> = {
-  family: (r) => r.familyFriendly,
-  quiet: (r) => r.quiet,
-  outdoor: (r) => r.outdoorSeating,
-  groups: (r) => r.groupFriendly,
+  family: (r) => r.familyFriendly === true,
+  quiet: (r) => r.quiet === true,
+  outdoor: (r) => r.outdoorSeating === true,
+  groups: (r) => r.groupFriendly === true,
   budget: (r) => r.priceLevel === 1,
-  openNow: (r) => r.openNow,
+  openNow: (r) => r.openNow === true,
 };
+
+/** Whether a preference can be answered by this data at all (some sources lack amenity info). */
+export function preferenceSupported(all: Restaurant[], p: SmartPreference): boolean {
+  return p === 'nearMe' || all.some(PREFERENCE_TESTS[p]);
+}
 
 export const DEFAULT_NEAR_RADIUS_KM = 5;
 

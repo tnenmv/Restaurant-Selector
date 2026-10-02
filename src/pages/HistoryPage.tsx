@@ -61,9 +61,9 @@ export function HistoryPage() {
           </Link>
         </EmptyState>
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2" data-testid="history-list">
+        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="history-list">
           {items.map(({ e, r }) => (
-            <li key={e.restaurantId} className="animate-fade-up">
+            <li key={e.restaurantId} className="min-w-0 animate-fade-up">
               <RestaurantRow
                 restaurant={r}
                 meta={

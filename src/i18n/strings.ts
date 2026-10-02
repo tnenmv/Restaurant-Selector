@@ -104,6 +104,16 @@ const ar = {
     group: 'مجموعة',
   },
   imageUnavailable: 'الصورة غير متاحة',
+  noRating: 'لا يوجد تقييم',
+  dataFrom: 'المصدر:',
+  mayBeOutdated: 'قد تكون المعلومات غير محدثة',
+  notInData: 'غير متوفر في البيانات الحالية',
+  realDataNote: (n: number) =>
+    `${n} مكان حقيقي في المدينة المنورة من بيانات Overture Maps المفتوحة. قد تكون بعض المعلومات ناقصة أو غير محدثة، والتقييمات والأسعار وأوقات العمل غير متوفرة فيها.`,
+  website: 'الموقع الإلكتروني',
+  phone: 'الهاتف',
+  showMore: 'عرض المزيد',
+  costUnknown: 'التكلفة غير معروفة لهذا المكان',
 };
 
 export type Strings = typeof ar;
@@ -214,6 +224,16 @@ const en: Strings = {
     group: 'Group',
   },
   imageUnavailable: 'Image unavailable',
+  noRating: 'No rating',
+  dataFrom: 'Source:',
+  mayBeOutdated: 'may be out of date',
+  notInData: 'Not available in the current data',
+  realDataNote: (n: number) =>
+    `${n} real places in Madinah from Overture Maps open data. Some details may be missing or out of date; ratings, prices and opening hours aren't included.`,
+  website: 'Website',
+  phone: 'Phone',
+  showMore: 'Show more',
+  costUnknown: 'Cost unknown for this place',
 };
 
 export const STRINGS = { ar, en };

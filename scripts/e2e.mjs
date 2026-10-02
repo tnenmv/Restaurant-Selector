@@ -53,7 +53,7 @@ async function run(label, viewport) {
     await page.getByRole('heading', { name: 'وش ناكل؟' }).waitFor();
     assert((await page.getAttribute('html', 'dir')) === 'rtl', 'html dir should be rtl');
     await page.getByText('خلّ الاختيار علينا').first().waitFor();
-    await page.getByTestId('prototype-note').waitFor();
+    await page.getByTestId('prototype-note').getByText(/مكان حقيقي/).waitFor();
     await shot(page, `${label}-1-home`);
   });
 
@@ -72,8 +72,8 @@ async function run(label, viewport) {
     await shot(page, `${label}-3-spinning`);
     await page.getByTestId('result-card').waitFor({ timeout: 6000 });
     first = (await page.getByTestId('result-name').textContent()).trim();
-    const allowed = ['بيت المندي الذهبي', 'ركن الكبسة', 'مضغوط شوران', 'كبدة وفول الجامعة', 'برجر الصحراء', 'برجر ستيشن'];
-    assert(allowed.includes(first), `unexpected pick "${first}"`);
+    const meta = await page.getByTestId('result-card').textContent();
+    assert(/سعودي|برجر/.test(meta), `pick "${first}" is not Saudi/burger`);
     await page.waitForTimeout(700);
     await shot(page, `${label}-4-result`);
   });
@@ -107,7 +107,7 @@ async function run(label, viewport) {
     await page.locator('#pick-options').getByRole('button', { name: 'ياباني' }).click();
     await page.locator('#pick-options').getByRole('button', { name: 'سعودي' }).click();
     await page.locator('#pick-options').getByRole('button', { name: 'برجر' }).click();
-    await page.locator('#pick-options').getByRole('button', { name: /اقتصادي/ }).click();
+    await page.locator('#pick-options').getByRole('button', { name: /فطور/ }).click();
     await page.getByTestId('pick-button').click();
     await page.getByTestId('no-match').waitFor({ timeout: 6000 });
     await page.getByText('ما لقينا مطاعم تطابق اختياراتك').waitFor();
@@ -144,7 +144,11 @@ async function run(label, viewport) {
     const n = await rows.count();
     assert(n >= 3, `expected >=3 history rows, got ${n}`);
     await shot(page, `${label}-8-history`);
-    await rows.first().getByRole('button', { name: 'حذف' }).click();
+    const vw = page.viewportSize().width;
+    for (const [l, r] of await rows.evaluateAll((els) => els.map((el) => [el.getBoundingClientRect().left, el.getBoundingClientRect().right]))) {
+      assert(l >= -1 && r <= vw + 1, `history row overflows the screen (${Math.round(l)}–${Math.round(r)}px)`);
+    }
+    await rows.first().getByRole('button', { name: 'حذف', exact: true }).last().click();
     assert((await rows.count()) === n - 1, 'remove failed');
     await page.getByTestId('pick-history').click();
     await page.getByRole('dialog').getByTestId('result-card').waitFor({ timeout: 6000 });
@@ -163,7 +167,8 @@ async function run(label, viewport) {
   });
 
   await step('map page renders markers and selection card', async () => {
-    await page.goto(BASE + '#/map?focus=r05');
+    const id = await page.evaluate(() => JSON.parse(localStorage.getItem('weshnakel:favorites'))[0]);
+    await page.goto(BASE + '#/map?focus=' + id);
     await page.getByTestId('map-selected').waitFor({ timeout: 10000 });
     // Either real tiles load, or (offline / blocked tiles) the schematic fallback kicks in.
     await page.waitForFunction(() => document.querySelector('[data-testid=schematic-map], .leaflet-tile-loaded'), null, { timeout: 9000 });
@@ -176,7 +181,8 @@ async function run(label, viewport) {
     await page.getByTestId('pick-button').click();
     await page.getByText('خلونا نشوف وين بتروحون اليوم...').first().waitFor();
     await page.getByTestId('result-card').waitFor({ timeout: 6000 });
-    await page.getByTestId('group-estimate').waitFor();
+    // Real data has no prices, so the page explains the cost is unknown instead of estimating.
+    await page.getByTestId('group-estimate').or(page.getByText('التكلفة غير معروفة')).first().waitFor();
     await shot(page, `${label}-11-group`);
   });
 

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { AREAS, MADINAH_CENTER } from '../../data/options';
 import { useApp } from '../../context/AppContext';
-import { markerIcon } from './markers';
+import { CATEGORY_DOT, DENSE_THRESHOLD, markerIcon } from './markers';
 import type { MapViewProps } from './types';
 
 const W = 1000;
@@ -14,9 +14,10 @@ const H = 760;
  */
 export function SchematicMapView({ restaurants, selectedId, onSelect, userLocation, className = '' }: MapViewProps) {
   const { lang, name } = useApp();
+  const dense = restaurants.length > DENSE_THRESHOLD;
 
   const project = useMemo(() => {
-    const pts = [...restaurants.map((r) => [r.latitude, r.longitude]), ...AREAS.map((a) => a.center)];
+    const pts = [...restaurants.map((r) => [r.latitude, r.longitude]), ...AREAS.flatMap((a) => (a.center ? [a.center] : []))];
     if (userLocation) pts.push([userLocation.latitude, userLocation.longitude]);
     const lats = pts.map((p) => p[0]);
     const lngs = pts.map((p) => p[1]);
@@ -58,6 +59,7 @@ export function SchematicMapView({ restaurants, selectedId, onSelect, userLocati
           );
         })}
         {AREAS.map((a) => {
+          if (!a.center) return null;
           const p = project(a.center[0], a.center[1]);
           return (
             <text key={a.value} x={p.x} y={p.y + 46} textAnchor="middle" fontSize="20" fontWeight="600" fill="#134d37" fillOpacity=".45" fontFamily="inherit">
@@ -74,6 +76,21 @@ export function SchematicMapView({ restaurants, selectedId, onSelect, userLocati
       {restaurants.map((r) => {
         const p = project(r.latitude, r.longitude);
         const sel = r.id === selectedId;
+        if (dense && !sel) {
+          return (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => onSelect?.(r.id)}
+              aria-label={name(r)}
+              title={name(r)}
+              className="absolute z-10 grid h-4 w-4 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full hover:z-20 hover:scale-150"
+              style={{ left: `${(p.x / W) * 100}%`, top: `${(p.y / H) * 100}%` }}
+            >
+              <span className="block h-2.5 w-2.5 rounded-full border border-white/90 shadow-sm" style={{ background: CATEGORY_DOT[r.category] }} />
+            </button>
+          );
+        }
         return (
           <button
             key={r.id}

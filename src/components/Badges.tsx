@@ -4,7 +4,11 @@ import { useApp } from '../context/AppContext';
 import { AREAS, CATEGORIES, CUISINES, PRICES, findOption } from '../data/options';
 import { formatDistance } from '../utils/geo';
 
-export function Rating({ value, size = 'sm' }: { value: number; size?: 'sm' | 'lg' }) {
+export function Rating({ value, size = 'sm' }: { value: number | null; size?: 'sm' | 'lg' }) {
+  const { t } = useApp();
+  if (value === null) {
+    return size === 'lg' ? <span className="text-sm text-ink-mute">☆ {t.noRating}</span> : null;
+  }
   return (
     <span
       className={`inline-flex items-center gap-1 font-semibold text-ink ${size === 'lg' ? 'text-base' : 'text-sm'}`}
@@ -18,8 +22,9 @@ export function Rating({ value, size = 'sm' }: { value: number; size?: 'sm' | 'l
   );
 }
 
-export function Price({ level }: { level: PriceLevel }) {
+export function Price({ level }: { level: PriceLevel | null }) {
   const { lang } = useApp();
+  if (level === null) return null;
   const opt = findOption(PRICES, level)!;
   return (
     <span className="inline-flex items-center gap-1 text-sm" title={lang === 'ar' ? opt.ar : opt.en}>
@@ -71,7 +76,8 @@ export function FeatureBadges({ restaurant: r }: { restaurant: Restaurant }) {
   const { t } = useApp();
   return (
     <div className="flex flex-wrap gap-1.5">
-      {r.openNow ? <Pill tone="green">● {t.openNow}</Pill> : <Pill tone="red">● {t.closed}</Pill>}
+      {r.openNow === true && <Pill tone="green">● {t.openNow}</Pill>}
+      {r.openNow === false && <Pill tone="red">● {t.closed}</Pill>}
       {r.familyFriendly && <Pill>👨‍👩‍👧 {t.familyFriendly}</Pill>}
       {r.outdoorSeating && <Pill>🌴 {t.outdoor}</Pill>}
       {r.quiet && <Pill>🤫 {t.quiet}</Pill>}
@@ -80,8 +86,10 @@ export function FeatureBadges({ restaurant: r }: { restaurant: Restaurant }) {
   );
 }
 
-export function SampleBadge({ className = '' }: { className?: string }) {
+/** Shown only on fictional prototype records. */
+export function SampleBadge({ restaurant, className = '' }: { restaurant: Restaurant; className?: string }) {
   const { t } = useApp();
+  if (!restaurant.isSample) return null;
   return (
     <span
       title={t.sampleNote}
@@ -89,5 +97,33 @@ export function SampleBadge({ className = '' }: { className?: string }) {
     >
       🧪 {t.sampleBadge}
     </span>
+  );
+}
+
+/** Website / phone / data-source line for real-world records. */
+export function SourceInfo({ restaurant: r, showContact = true }: { restaurant: Restaurant; showContact?: boolean }) {
+  const { t } = useApp();
+  if (r.isSample) return null;
+  const site = r.website?.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+  return (
+    <div className="space-y-1.5 text-sm">
+      {showContact && (r.website || r.phone) && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          {r.website && (
+            <a href={r.website} target="_blank" rel="noreferrer" className="inline-flex max-w-full items-center gap-1 font-medium text-palm-700 hover:underline">
+              🌐 <span className="truncate" dir="ltr">{site}</span>
+            </a>
+          )}
+          {r.phone && (
+            <span className="inline-flex items-center gap-1 text-ink-soft">
+              📞 <a href={`tel:${r.phone}`} dir="ltr" className="select-all hover:text-palm-700">{r.phone}</a>
+            </span>
+          )}
+        </div>
+      )}
+      <p className="text-xs text-ink-mute">
+        {t.dataFrom} Overture Maps{r.sources?.length ? ` (${r.sources.join('، ')})` : ''} · {t.mayBeOutdated}
+      </p>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PickMode, Restaurant } from '../types';
-import { pickAvoidingRecent, pickOne, recentWindow } from '../utils/random';
+import { pickBrandAvoidingRecent, pickOne } from '../utils/random';
 
 export type PickerPhase = 'idle' | 'spinning' | 'revealed' | 'empty' | 'error';
 
@@ -80,8 +80,8 @@ export function usePicker({ visualPool, recentIds, onPicked }: Options) {
       return;
     }
 
-    const recent = latest.current.recentIds.slice(0, recentWindow(pool.length));
-    const winner = pickAvoidingRecent(pool, recent)!;
+    const names = new Map([...latest.current.visualPool, ...pool].map((r) => [r.id, r.name]));
+    const winner = pickBrandAvoidingRecent(pool, latest.current.recentIds, (id) => names.get(id))!;
 
     // Phase 2: decelerate through the real pool, landing on the winner.
     const steps = reduced ? 2 : 14;

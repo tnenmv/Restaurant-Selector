@@ -30,8 +30,18 @@ export function MapPage() {
 
   const visible = useMemo(() => {
     const list = cuisine ? restaurants.filter((r) => r.cuisine === cuisine || r.id === selectedId) : restaurants;
-    return [...list].sort((a, b) => (geo.location ? distanceTo(a)! - distanceTo(b)! : b.rating - a.rating));
-  }, [restaurants, cuisine, geo.location, distanceTo, selectedId]);
+    return [...list].sort((a, b) =>
+      geo.location ? distanceTo(a)! - distanceTo(b)! : (b.rating ?? 0) - (a.rating ?? 0) || name(a).localeCompare(name(b), lang),
+    );
+  }, [restaurants, cuisine, geo.location, distanceTo, selectedId, name, lang]);
+  const [limit, setLimit] = useState(40);
+  useEffect(() => setLimit(40), [cuisine, geo.location]);
+  // Keep the selected place visible in the list even beyond the current page.
+  const listed = useMemo(() => {
+    const page = visible.slice(0, limit);
+    const sel = visible.find((r) => r.id === selectedId);
+    return sel && !page.includes(sel) ? [sel, ...page] : page;
+  }, [visible, limit, selectedId]);
 
   const selected = restaurants.find((r) => r.id === selectedId);
   const usedCuisines = CUISINES.filter((c) => restaurants.some((r) => r.cuisine === c.value));
@@ -53,16 +63,25 @@ export function MapPage() {
             </Chip>
           ))}
         </div>
-        <h2 className="mb-2 text-sm font-semibold text-ink-mute">{geo.location ? `🧭 ${t.nearest}` : t.allRestaurants}</h2>
+        <h2 className="mb-2 text-sm font-semibold text-ink-mute">
+          {geo.location ? `🧭 ${t.nearest}` : t.allRestaurants} · {visible.length}
+        </h2>
         {status === 'loading' ? (
           <SkeletonRows />
         ) : (
           <ul className="space-y-3 lg:max-h-[calc(100dvh-260px)] lg:overflow-y-auto lg:pe-1">
-            {visible.map((r) => (
+            {listed.map((r) => (
               <li key={r.id}>
                 <RestaurantRow restaurant={r} selected={r.id === selectedId} onSelect={() => select(r.id)} />
               </li>
             ))}
+            {visible.length > limit && (
+              <li>
+                <button type="button" className="btn-ghost w-full" onClick={() => setLimit((n) => n + 40)}>
+                  {t.showMore} ({visible.length - limit})
+                </button>
+              </li>
+            )}
           </ul>
         )}
       </div>

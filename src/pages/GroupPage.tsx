@@ -8,12 +8,17 @@ import { PickerStage } from '../components/PickerStage';
 import { Chip } from '../components/Chip';
 import { PRICE_RANGE_SAR } from '../data/options';
 import type { SmartPreference } from '../types';
+import { preferenceSupported } from '../utils/filters';
 
 const FACES = ['😋', '🤤', '😎', '🥳', '🤩', '😄', '🙂', '😁', '🤠', '😇', '🧐', '😺'];
 
 export function GroupPage() {
   const { t, lang, restaurants, history, dir } = useApp();
   const [people, setPeople] = useState(4);
+  const canGroups = preferenceSupported(restaurants, 'groups');
+  const canOpen = preferenceSupported(restaurants, 'openNow');
+  const canBudget = preferenceSupported(restaurants, 'budget');
+  const canFamily = preferenceSupported(restaurants, 'family');
   const [groupOnly, setGroupOnly] = useState(true);
   const [openOnly, setOpenOnly] = useState(false);
   const [budget, setBudget] = useState(false);
@@ -26,12 +31,12 @@ export function GroupPage() {
 
   const prefs = useMemo(() => {
     const p: SmartPreference[] = [];
-    if (groupOnly) p.push('groups');
-    if (openOnly) p.push('openNow');
-    if (budget) p.push('budget');
-    if (people >= 3 && !groupOnly) p.push('family');
+    if (groupOnly && canGroups) p.push('groups');
+    if (openOnly && canOpen) p.push('openNow');
+    if (budget && canBudget) p.push('budget');
+    if (people >= 3 && !(groupOnly && canGroups) && canFamily) p.push('family');
     return p;
-  }, [groupOnly, openOnly, budget, people]);
+  }, [groupOnly, openOnly, budget, people, canGroups, canOpen, canBudget, canFamily]);
 
   const go = () => void picker.spin(() => restaurantService.searchRestaurants({ preferences: prefs }), 'group');
   const spinning = picker.phase === 'spinning';
@@ -94,15 +99,21 @@ export function GroupPage() {
       </section>
 
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        <Chip active={groupOnly} onClick={() => setGroupOnly((v) => !v)} icon="👥">
-          {t.groupOnlyFriendly}
-        </Chip>
-        <Chip active={openOnly} onClick={() => setOpenOnly((v) => !v)} icon="🟢">
-          {t.openNow}
-        </Chip>
-        <Chip active={budget} onClick={() => setBudget((v) => !v)} icon="💰">
-          {lang === 'ar' ? 'مناسب للميزانية' : 'Budget friendly'}
-        </Chip>
+        {canGroups && (
+          <Chip active={groupOnly} onClick={() => setGroupOnly((v) => !v)} icon="👥">
+            {t.groupOnlyFriendly}
+          </Chip>
+        )}
+        {canOpen && (
+          <Chip active={openOnly} onClick={() => setOpenOnly((v) => !v)} icon="🟢">
+            {t.openNow}
+          </Chip>
+        )}
+        {canBudget && (
+          <Chip active={budget} onClick={() => setBudget((v) => !v)} icon="💰">
+            {lang === 'ar' ? 'مناسب للميزانية' : 'Budget friendly'}
+          </Chip>
+        )}
       </div>
 
       <div className="mt-5">
@@ -137,17 +148,20 @@ export function GroupPage() {
             </button>
           }
         />
-        {picker.phase === 'revealed' && r && (
+        {picker.phase === 'revealed' && r && r.priceLevel === null && (
+          <p className="text-center text-xs text-ink-mute">💸 {t.costUnknown}</p>
+        )}
+        {picker.phase === 'revealed' && r && r.priceLevel !== null && (
           <div className="card animate-fade-up p-4 text-center" data-testid="group-estimate">
             <div className="text-sm font-semibold text-ink-mute">💸 {t.groupEstimate}</div>
             <div className="mt-1 font-display text-2xl font-bold text-palm-700">
               <span dir="ltr">
-                {PRICE_RANGE_SAR[r.priceLevel][0] * people}–{PRICE_RANGE_SAR[r.priceLevel][1] * people}
+                {PRICE_RANGE_SAR[r.priceLevel!][0] * people}–{PRICE_RANGE_SAR[r.priceLevel!][1] * people}
               </span>{' '}
               {t.sar}
             </div>
             <div className="text-xs text-ink-mute">
-              ≈ {PRICE_RANGE_SAR[r.priceLevel][0]}–{PRICE_RANGE_SAR[r.priceLevel][1]} {t.sar} {t.perPerson} · {t.approx}
+              ≈ {PRICE_RANGE_SAR[r.priceLevel!][0]}–{PRICE_RANGE_SAR[r.priceLevel!][1]} {t.sar} {t.perPerson} · {t.approx}
             </div>
           </div>
         )}

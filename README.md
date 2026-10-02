@@ -4,7 +4,26 @@
 
 A fun, Arabic-first (RTL) web app that **randomly picks a restaurant in Madinah** for you, with an optional English switch.
 
-> ⚠️ **Prototype / sample data.** Every restaurant in `src/data/restaurants.ts` is **fictional**: names, ratings, prices, hours and descriptions were made up for this prototype and are **not** verified real-world information. District names are real Madinah neighbourhoods; coordinates are approximate points inside them. The UI labels this data as «بيانات تجريبية».
+## Data
+
+**Default: real places from Overture Maps.** `src/data/madinahPlaces.json` holds about 1,040 real food & drink places in Madinah (restaurants, cafés, dessert shops, bakeries) from the [Overture Maps](https://overturemaps.org) open dataset, compiled from Meta, Microsoft, Foursquare, AllThePlaces and others (CDLA-Permissive-2.0 and other open licenses).
+
+- Only places with Overture confidence ≥ 0.5 are kept. Duplicates within 150 m are merged.
+- **Category and cuisine are inferred** from Overture's taxonomy and keywords in the name (Arabic and English, plus common chains). Chains and places that don't fit a cuisine, such as fried-chicken chains, go under «أخرى».
+- **District is approximate:** each place is assigned to the nearest listed district centre, or «مناطق أخرى» if it is more than 3.5 km from all of them.
+- **Not in the data:** ratings, prices, opening hours and amenities (family, outdoor seating, quiet and so on). The app treats these as unknown. Filters that depend on them are greyed out, and nothing is guessed.
+- Records can be incomplete or out of date. The UI says so and names the source.
+
+Refresh it with:
+
+```bash
+pip install pyarrow
+python3 scripts/import-overture.py          # latest release; --min-confidence to tune
+```
+
+**Sample data.** `src/data/restaurants.ts` keeps the original 38 **fictional** restaurants, which do have ratings, prices and amenities. Use them with `VITE_RESTAURANT_SOURCE=sample`. They are labelled «بيانات تجريبية» in the UI and are not real-world information.
+
+**Chains count once.** Random picks choose a restaurant first, giving each brand an equal chance, and then one of its branches. This stops a chain with 25 branches from dominating, and "pick again" won't land on another branch of the same chain.
 
 ## Features
 
@@ -65,8 +84,8 @@ interface RestaurantService {
 }
 ```
 
-- **Default:** `mockRestaurantService` serves the bundled sample dataset with a small simulated latency.
-- **Custom backend:** set `VITE_RESTAURANT_SOURCE=http` and `VITE_RESTAURANT_API_URL=…` (see `.env.example`). `httpRestaurantService` expects `GET /restaurants` and `GET /restaurants/:id`. If the API is unreachable, it falls back to the sample data, so the app still works.
+- **Default:** `overtureRestaurantService` serves the bundled Overture extract (lazy-loaded chunk, no network needed). `mockRestaurantService` serves the fictional sample set (`VITE_RESTAURANT_SOURCE=sample`).
+- **Custom backend:** set `VITE_RESTAURANT_SOURCE=http` and `VITE_RESTAURANT_API_URL=…` (see `.env.example`). `httpRestaurantService` expects `GET /restaurants` and `GET /restaurants/:id`. If the API is unreachable, it falls back to the bundled Overture data, so the app still works.
 - **Google Places / open data / anything else:** write an adapter that maps results onto the `Restaurant` type and return it from `createService()`. Read keys from `import.meta.env`, never from source.
 
 ## Map providers

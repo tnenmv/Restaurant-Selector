@@ -34,9 +34,9 @@ export function FavoritesPage() {
           </Link>
         </EmptyState>
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {list.map((r) => (
-            <li key={r.id} className="animate-fade-up">
+            <li key={r.id} className="min-w-0 animate-fade-up">
               <RestaurantRow restaurant={r} actions={<FavoriteToggle restaurant={r} />} />
             </li>
           ))}
