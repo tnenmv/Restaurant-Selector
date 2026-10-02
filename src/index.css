@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-sand-100 text-ink font-sans antialiased;
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-palm-500 ring-offset-2 ring-offset-sand-100;
+  }
+  button {
+    touch-action: manipulation;
+  }
+}
+
+@layer components {
+  /* Subtle palm-frond / date pattern used behind the hero. */
+  .bg-palm-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%2318794e' stroke-opacity='.07' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M30 92 C30 70 32 52 36 34'/%3E%3Cpath d='M36 34 C28 30 20 32 14 38 M36 34 C30 24 22 20 14 22 M36 34 C40 24 48 20 56 22 M36 34 C44 30 52 32 58 38 M36 34 C36 24 38 16 42 10'/%3E%3Cpath d='M90 46 l6 6 -6 6 -6 -6z'/%3E%3C/g%3E%3Cg fill='%23c27d36' fill-opacity='.09'%3E%3Cellipse cx='84' cy='92' rx='3' ry='4.5'/%3E%3Cellipse cx='92' cy='96' rx='3' ry='4.5'/%3E%3Cellipse cx='88' cy='86' rx='3' ry='4.5'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .card {
+    @apply bg-white rounded-3xl shadow-soft border border-sand-200/70;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 min-h-[48px] font-semibold
+      transition-all duration-200 active:scale-[.97] disabled:opacity-50 disabled:pointer-events-none select-none;
+  }
+  .btn-primary {
+    @apply btn bg-palm-600 text-white shadow-glow hover:bg-palm-700;
+  }
+  .btn-soft {
+    @apply btn bg-palm-50 text-palm-800 hover:bg-palm-100 border border-palm-100;
+  }
+  .btn-ghost {
+    @apply btn bg-white text-ink-soft hover:bg-sand-200 border border-sand-300;
+  }
+  .section-title {
+    @apply font-display text-lg font-semibold text-ink;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #f3ede0 0px, #faf7f0 160px, #f3ede0 320px);
+    background-size: 800px 100%;
+    @apply animate-shimmer rounded-2xl;
+  }
+}
+
+/* Confetti */
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+.confetti-piece {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  animation: confetti-fall var(--dur) cubic-bezier(.15, .7, .4, 1) forwards;
+  animation-delay: var(--delay);
+  pointer-events: none;
+}
+
+/* Pick button glow ring */
+@keyframes ring-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(39, 151, 99, .45);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgba(39, 151, 99, 0);
+  }
+}
+.pulse-ring {
+  animation: ring-pulse 2.2s ease-out infinite;
+}
+.pulse-ring-gold {
+  animation: ring-pulse-gold 2.2s ease-out infinite;
+}
+@keyframes ring-pulse-gold {
+  0% {
+    box-shadow: 0 0 0 0 rgba(194, 125, 54, .45);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgba(194, 125, 54, 0);
+  }
+}
+
+/* Leaflet tweaks */
+.leaflet-container {
+  font-family: inherit;
+  background: #eef3ee;
+}
+.emoji-pin {
+  background: transparent;
+  border: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@keyframes loadbar {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
