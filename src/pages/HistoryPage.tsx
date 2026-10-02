@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { usePicker } from '../hooks/usePicker';
@@ -8,6 +9,7 @@ import { PageHeader } from '../components/PageHeader';
 
 export function HistoryPage() {
   const { t, history, getById, status } = useApp();
+  const [confirming, setConfirming] = useState(false);
   const items = history.entries
     .map((e) => ({ e, r: getById(e.restaurantId) }))
     .filter((x): x is { e: typeof x.e; r: NonNullable<typeof x.r> } => x.r !== undefined);
@@ -29,15 +31,24 @@ export function HistoryPage() {
             <button type="button" className="btn-primary" onClick={pick} data-testid="pick-history">
               🎲 {t.pickFromHistory}
             </button>
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() => {
-                if (window.confirm(t.confirmClear)) history.clear();
-              }}
-            >
-              🗑️ {t.clearHistory}
-            </button>
+            {confirming ? (
+              <button
+                type="button"
+                className="btn border border-rose-200 bg-rose-50 text-rose-700"
+                onClick={() => {
+                  history.clear();
+                  setConfirming(false);
+                }}
+                onBlur={() => setConfirming(false)}
+                autoFocus
+              >
+                🗑️ {t.confirmClear}
+              </button>
+            ) : (
+              <button type="button" className="btn-ghost" onClick={() => setConfirming(true)}>
+                🗑️ {t.clearHistory}
+              </button>
+            )}
           </>
         )}
       </PageHeader>
